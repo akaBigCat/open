@@ -63,7 +63,6 @@
   a.href = app;
   if (web) w.href = web; else w.hidden = true;
   document.getElementById("buttons").hidden = false;
-  if (q.has("tap")) { msg.textContent = "Tap to open."; return; }   // test: does a tap skip Safari's "Open in app?" question?
   msg.textContent = "If the app didn't open, tap below.";
   location.href = app;
 })();
