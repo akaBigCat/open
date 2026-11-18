@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Open</title>
+<style>
+  :root { color-scheme: light dark; --bg: #fff; --fg: #1a1a1a; --muted: #666; --btn: #f0f0f0; --line: #ddd; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #141414; --fg: #eee; --muted: #999; --btn: #262626; --line: #333; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  main { max-width: 420px; margin: 18vh auto 0; padding: 0 16px; text-align: center; }
+  p { color: var(--muted); }
+  a.btn { display: block; margin: 12px 0; padding: 14px; border-radius: 12px; background: var(--btn); border: 1px solid var(--line); color: var(--fg); text-decoration: none; font-weight: 600; }
+  [hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <p id="msg">Opening…</p>
+  <div id="buttons" hidden>
+    <a class="btn" id="app" href="#">Open in app</a>
+    <a class="btn" id="web" href="#">Open on the web</a>
+  </div>
+</main>
+<script>
+/*
+  One https link that opens the right place on each device (Claude only makes https links tappable).
+  Everything is after the #, which browsers never send to the server, so GitHub sees no IDs.
+
+    #gmail=<threadId>    Gmail thread or draft (thread ID from the Gmail connector)
+    #app=<url>&web=<url> anything else; app must be an allowed app scheme, web an allowed https host
+
+  Phone: tries the app, with buttons as a fallback. Computer: goes straight to the web link.
+*/
+(function () {
+  var q = new URLSearchParams(location.hash.slice(1));
+  var app = "", web = "";
+  var gmail = q.get("gmail") || "";
+  if (/^[0-9a-f]{6,32}$/i.test(gmail)) {
+    app = "googlegmail:///cv=" + gmail + "/accountId=1";
+    web = "https://mail.google.com/mail/u/0/#all/" + gmail;
+  } else {
+    app = q.get("app") || "";
+    web = q.get("web") || "";
+  }
+  // Allowlists, so this page can't be used to send people anywhere else
+  var APP_OK = /^(googlegmail|googlecalendar|googledrive|notion):\/\//i;
+  var WEB_OK = /^https:\/\/(mail|calendar|docs|drive)\.google\.com\/|^https:\/\/(www\.)?notion\.so\//i;
+  if (!APP_OK.test(app)) app = "";
+  if (!WEB_OK.test(web)) web = "";
+
+  var msg = document.getElementById("msg");
+  if (!app && !web) { msg.textContent = "Nothing to open: the link is missing or not allowed."; return; }
+
+  var ua = navigator.userAgent;
+  var phone = /iPhone|iPad|iPod|Android/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+
+  if (!phone || !app) { location.replace(web || app); return; }
+
+  var a = document.getElementById("app"), w = document.getElementById("web");
+  a.href = app;
+  if (web) w.href = web; else w.hidden = true;
+  document.getElementById("buttons").hidden = false;
+  msg.textContent = "If the app didn't open, tap below.";
+  location.href = app;
+})();
+</script>
+</body>
+</html>
